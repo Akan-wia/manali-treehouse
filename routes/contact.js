@@ -7,10 +7,13 @@ require('dotenv').config();
 router.post('/', async (req, res) => {
   const { name, email, subject, message } = req.body;
 
+  // Use empty string if subject is missing or null
+  const subjectValue = subject || '';
+
   try {
     await pool.query(
       'INSERT INTO contacts (name, email, subject, message) VALUES (?, ?, ?, ?)',
-      [name, email, subject, message]
+      [name, email, subjectValue, message]
     );
 
     const transporter = nodemailer.createTransport({
@@ -24,7 +27,7 @@ router.post('/', async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.NOTIFY_EMAIL,
-      subject: `New Contact Form Submission: ${subject}`,
+      subject: `New Contact Form Submission${subjectValue ? `: ${subjectValue}` : ''}`,
       text: `Message from ${name} (${email}):\n\n${message}`
     };
 
@@ -35,5 +38,6 @@ router.post('/', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 module.exports = router;
